@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do evento - Encontraê</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="evento-pagina">
+<header class="topbar">
+    <a href="index.html" class="brand"><span class="brand-icon">e</span> encontraê</a>
+    <nav>
+        <a href="index.html#eventos">Explorar eventos</a>
+        <a href="sobre.html">Sobre nós</a>
+        <a href="sugestoes.html">Sugestões e reclamações</a>
+    </nav>
+    <a href="index.html#eventos" class="btn btn-outline">Voltar aos eventos</a>
+</header>
+
+<main>
+    <section class="hero sobre-hero">
+        <span class="etiqueta">DETALHES DO ENCONTRO</span>
+        <h1 id="evento-titulo">Seu próximo encontro<br><span>começa aqui.</span></h1>
+        <p id="evento-resumo">Confira as informações e prepare-se para viver uma nova experiência.</p>
+    </section>
+
+    <section class="evento-detalhe" aria-labelledby="evento-titulo-detalhes">
+        <div class="evento-detalhe-cabecalho">
+            <span class="etiqueta">TEMA DO EVENTO</span>
+            <span id="evento-tema" class="evento-detalhe-etiqueta">A definir</span>
+            <h2 id="evento-titulo-detalhes">Detalhes do evento</h2>
+            <p id="evento-chamada">Veja quando e onde o encontro vai acontecer.</p>
+        </div>
+
+        <div class="evento-detalhe-info">
+            <article>
+                <span>Data</span>
+                <strong id="evento-data">A confirmar</strong>
+            </article>
+            <article>
+                <span>Local</span>
+                <strong id="evento-local">A confirmar</strong>
+            </article>
+            <article>
+                <span>Organizado por</span>
+                <strong id="evento-organizador">Comunidade Encontraê</strong>
+            </article>
+        </div>
+
+        <section class="evento-detalhe-descricao">
+            <h3>Sobre este encontro</h3>
+            <p id="evento-descricao">Os detalhes deste encontro serão disponibilizados em breve.</p>
+        </section>
+
+        <div class="evento-detalhe-acoes">
+            <a href="index.html#eventos" class="btn btn-primary">Explorar outros eventos →</a>
+            <a href="sugestoes.html" class="btn btn-outline">Falar com a gente</a>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <a href="index.html" class="brand"><span class="brand-icon">e</span> encontraê</a>
+    <p>Conectando pessoas e experiências.</p>
+    <small>Projeto acadêmico</small>
+</footer>
+
+<script>
+    const parametros = new URLSearchParams(window.location.search);
+    const titulo = parametros.get('nome');
+    const tema = parametros.get('tema') || parametros.get('categoria');
+    const data = parametros.get('data');
+    const local = parametros.get('local');
+    const descricao = parametros.get('descricao');
+    const organizador = parametros.get('organizador');
+
+    if (titulo) {
+        document.title = `${titulo} - Encontraê`;
+        document.getElementById('evento-titulo').textContent = titulo;
+        document.getElementById('evento-titulo-detalhes').textContent = titulo;
+        document.getElementById('evento-chamada').textContent = 'Confira as informações deste encontro.';
+        document.getElementById('evento-resumo').textContent = descricao || 'Confira os detalhes e participe deste encontro.';
+    }
+
+    if (tema) document.getElementById('evento-tema').textContent = tema;
+    if (data) {
+        const dataEvento = new Date(`${data}T00:00:00`);
+        document.getElementById('evento-data').textContent = Number.isNaN(dataEvento.getTime())
+            ? data
+            : new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(dataEvento);
+    }
+    if (local) document.getElementById('evento-local').textContent = local;
+    if (organizador) document.getElementById('evento-organizador').textContent = organizador;
+    if (descricao) document.getElementById('evento-descricao').textContent = descricao;
+</script>
+</body>
+</html>
