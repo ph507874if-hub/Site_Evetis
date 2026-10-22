@@ -208,7 +208,6 @@ def get_inscricao_unica(id):
         "presente": inscricao.presente
     })
 
-
 @app.route("/inscricoes", methods=["POST"])
 def add_inscricao():
     s = Session()
@@ -257,7 +256,6 @@ def add_inscricao():
         "id": inscricao.id
     }), 201
 
-
 # =========================
 # CONFIRMAR PRESENÇA
 # =========================
@@ -285,7 +283,6 @@ def confirmar_presenca(id):
         "presente": inscricao.presente
     })
 
-
 # =========================
 # CERTIFICADOS
 # =========================
@@ -304,7 +301,6 @@ def get_certificacoes():
         }
         for c in certificados
     ])
-
 
 @app.route("/certificacoes/<string:codigo>", methods=["GET"])
 def get_certificado_unico(codigo):
@@ -329,7 +325,6 @@ def get_certificado_unico(codigo):
         "data_evento": evento.data.isoformat(),
         "inscricao_id": inscricao.id
     })
-
 
 @app.route("/certificacoes/emitir", methods=["POST"])
 def emitir_certificados():
@@ -377,7 +372,6 @@ def emitir_certificados():
         "certificados": emitidos
     })
 
-
 @app.route("/usuarios/<int:id>/certificacoes", methods=["GET"])
 def get_certificados_usuario(id):
     s = Session()
@@ -403,7 +397,6 @@ def get_certificados_usuario(id):
             })
 
     return jsonify(resultado)
-
 
 # =========================
 # INICIAR SERVIDOR
