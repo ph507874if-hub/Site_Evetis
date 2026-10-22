@@ -58,7 +58,6 @@ def get_eventos():
         for e in eventos
     ])
 
-
 @app.route("/eventos/<int:id>", methods=["GET"])
 def get_evento_unico(id):
     s = Session()
@@ -75,7 +74,6 @@ def get_evento_unico(id):
         "local": evento.local,
         "admin_id": evento.admin_id
     })
-
 
 @app.route("/eventos", methods=["POST"])
 def add_evento():
