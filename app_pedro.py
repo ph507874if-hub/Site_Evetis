@@ -4,8 +4,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from datetime import date
 from uuid import uuid4
+
 # Modelos desenvolvidos por João Pedro
 from modelos import Base, Usuario, Admin
+
 # Modelos desenvolvidos por você
 from modelos_eventos import Evento, Inscricao, Certificacao
 
