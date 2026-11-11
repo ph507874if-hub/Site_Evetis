@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from sqlalchemy import create_engine
@@ -15,8 +16,12 @@ from modelos import Base, Usuario, Admin
 # Modelos de eventos, inscrições e certificações
 from modelos_pedro import Evento, Inscricao, Certificacao
 
-# Modelo de sugestões e rotas de cadastro
-from modelos_cadastro_sugestoes import Sugestao, registrar_rotas
+# Modelos de sugestões, avaliações e rotas de cadastro
+from modelos_cadastro_sugestoes import (
+    Sugestao,
+    Avaliacao,
+    registrar_rotas
+)
 
 
 # =========================
@@ -34,10 +39,11 @@ CORS(app)
 engine = create_engine("sqlite:///database.db")
 Session = sessionmaker(bind=engine)
 
-# Cria as tabelas dos modelos importados
+# Cria as tabelas de todos os modelos importados
 Base.metadata.create_all(engine)
 
-# Registra as rotas de cadastro e sugestões
+# Registra as rotas de cadastro, login,
+# sugestões, reclamações e avaliações
 registrar_rotas(app, Session)
 
 
@@ -56,6 +62,7 @@ def index():
 # EVENTOS
 # =========================
 
+# LISTAR TODOS OS EVENTOS
 @app.route("/eventos", methods=["GET"])
 def get_eventos():
     s = Session()
@@ -67,6 +74,7 @@ def get_eventos():
             {
                 "id": e.id,
                 "nome": e.nome,
+                "categoria": getattr(e, "categoria", "Outros"),
                 "descricao": e.descricao,
                 "data": e.data.isoformat(),
                 "local": e.local,
@@ -74,10 +82,12 @@ def get_eventos():
             }
             for e in eventos
         ])
+
     finally:
         s.close()
 
 
+# BUSCAR UM EVENTO PELO ID
 @app.route("/eventos/<int:id>", methods=["GET"])
 def get_evento_unico(id):
     s = Session()
@@ -93,23 +103,26 @@ def get_evento_unico(id):
         return jsonify({
             "id": evento.id,
             "nome": evento.nome,
+            "categoria": getattr(evento, "categoria", "Outros"),
             "descricao": evento.descricao,
             "data": evento.data.isoformat(),
             "local": evento.local,
             "admin_id": evento.admin_id
         })
+
     finally:
         s.close()
 
 
+# CADASTRAR EVENTO
 @app.route("/eventos", methods=["POST"])
 def add_evento():
     s = Session()
 
     try:
-        data = request.get_json(silent=True)
+        dados = request.get_json(silent=True)
 
-        if not data:
+        if not dados:
             return jsonify({
                 "mensagem": "Envie os dados do evento!"
             }), 400
@@ -117,14 +130,14 @@ def add_evento():
         campos = ["nome", "data", "local", "admin_id"]
 
         if any(
-            campo not in data or data[campo] in (None, "")
+            campo not in dados or dados[campo] in (None, "")
             for campo in campos
         ):
             return jsonify({
                 "mensagem": "Informe nome, data, local e admin_id."
             }), 400
 
-        administrador = s.get(Admin, data["admin_id"])
+        administrador = s.get(Admin, dados["admin_id"])
 
         if not administrador:
             return jsonify({
@@ -132,19 +145,24 @@ def add_evento():
             }), 404
 
         try:
-            data_evento = date.fromisoformat(data["data"])
+            data_evento = date.fromisoformat(dados["data"])
+
         except (ValueError, TypeError):
             return jsonify({
                 "mensagem": "Data inválida! Use o formato AAAA-MM-DD."
             }), 400
 
         evento = Evento(
-            nome=data["nome"],
-            descricao=data.get("descricao", ""),
+            nome=dados["nome"],
+            descricao=dados.get("descricao", ""),
             data=data_evento,
-            local=data["local"],
+            local=dados["local"],
             admin_id=administrador.id
         )
+
+        # Salva a categoria se o modelo possuir esse campo
+        if hasattr(Evento, "categoria"):
+            evento.categoria = dados.get("categoria", "Outros")
 
         s.add(evento)
         s.commit()
@@ -154,8 +172,10 @@ def add_evento():
             "id": evento.id
         }), 201
 
-    except Exception:
+    except Exception as erro:
         s.rollback()
+        print("Erro ao cadastrar evento:", erro)
+
         return jsonify({
             "mensagem": "Erro ao cadastrar evento."
         }), 500
@@ -164,6 +184,7 @@ def add_evento():
         s.close()
 
 
+# ATUALIZAR EVENTO
 @app.route("/eventos/<int:id>", methods=["PUT"])
 def atualizar_evento(id):
     s = Session()
@@ -176,40 +197,43 @@ def atualizar_evento(id):
                 "mensagem": "Evento não encontrado!"
             }), 404
 
-        data = request.get_json(silent=True)
+        dados = request.get_json(silent=True)
 
-        if not data:
+        if not dados:
             return jsonify({
                 "mensagem": "Envie os dados do evento!"
             }), 400
 
-        try:
-            if "nome" in data:
-                evento.nome = data["nome"]
+        if "nome" in dados:
+            evento.nome = dados["nome"]
 
-            if "descricao" in data:
-                evento.descricao = data["descricao"]
+        if "descricao" in dados:
+            evento.descricao = dados["descricao"]
 
-            if "data" in data:
-                evento.data = date.fromisoformat(data["data"])
+        if "local" in dados:
+            evento.local = dados["local"]
 
-            if "local" in data:
-                evento.local = data["local"]
+        if "categoria" in dados and hasattr(Evento, "categoria"):
+            evento.categoria = dados["categoria"]
 
-            if "admin_id" in data:
-                administrador = s.get(Admin, data["admin_id"])
+        if "data" in dados:
+            try:
+                evento.data = date.fromisoformat(dados["data"])
 
-                if not administrador:
-                    return jsonify({
-                        "mensagem": "Administrador não encontrado!"
-                    }), 404
+            except (ValueError, TypeError):
+                return jsonify({
+                    "mensagem": "Data inválida! Use AAAA-MM-DD."
+                }), 400
 
-                evento.admin_id = administrador.id
+        if "admin_id" in dados:
+            administrador = s.get(Admin, dados["admin_id"])
 
-        except (ValueError, TypeError):
-            return jsonify({
-                "mensagem": "Data inválida! Use o formato AAAA-MM-DD."
-            }), 400
+            if not administrador:
+                return jsonify({
+                    "mensagem": "Administrador não encontrado!"
+                }), 404
+
+            evento.admin_id = administrador.id
 
         s.commit()
 
@@ -217,8 +241,10 @@ def atualizar_evento(id):
             "mensagem": "Evento atualizado com sucesso!"
         })
 
-    except Exception:
+    except Exception as erro:
         s.rollback()
+        print("Erro ao atualizar evento:", erro)
+
         return jsonify({
             "mensagem": "Erro ao atualizar evento."
         }), 500
@@ -227,6 +253,7 @@ def atualizar_evento(id):
         s.close()
 
 
+# DELETAR EVENTO
 @app.route("/eventos/<int:id>", methods=["DELETE"])
 def deletar_evento(id):
     s = Session()
@@ -255,8 +282,10 @@ def deletar_evento(id):
             "mensagem": "Evento deletado com sucesso!"
         })
 
-    except Exception:
+    except Exception as erro:
         s.rollback()
+        print("Erro ao deletar evento:", erro)
+
         return jsonify({
             "mensagem": "Erro ao deletar evento."
         }), 500
@@ -269,6 +298,7 @@ def deletar_evento(id):
 # INSCRIÇÕES
 # =========================
 
+# LISTAR TODAS AS INSCRIÇÕES
 @app.route("/inscricoes", methods=["GET"])
 def get_inscricoes():
     s = Session()
@@ -286,10 +316,12 @@ def get_inscricoes():
             }
             for i in inscricoes
         ])
+
     finally:
         s.close()
 
 
+# BUSCAR UMA INSCRIÇÃO PELO ID
 @app.route("/inscricoes/<int:id>", methods=["GET"])
 def get_inscricao_unica(id):
     s = Session()
@@ -309,30 +341,36 @@ def get_inscricao_unica(id):
             "data_inscricao": inscricao.data_inscricao.isoformat(),
             "presente": inscricao.presente
         })
+
     finally:
         s.close()
 
 
+# REALIZAR INSCRIÇÃO
 @app.route("/inscricoes", methods=["POST"])
 def add_inscricao():
     s = Session()
 
     try:
-        data = request.get_json(silent=True)
+        dados = request.get_json(silent=True)
 
-        if not data or "usuario_id" not in data or "evento_id" not in data:
+        if (
+            not dados
+            or "usuario_id" not in dados
+            or "evento_id" not in dados
+        ):
             return jsonify({
                 "mensagem": "Informe usuario_id e evento_id."
             }), 400
 
-        usuario = s.get(Usuario, data["usuario_id"])
+        usuario = s.get(Usuario, dados["usuario_id"])
 
         if not usuario:
             return jsonify({
                 "mensagem": "Usuário não encontrado!"
             }), 404
 
-        evento = s.get(Evento, data["evento_id"])
+        evento = s.get(Evento, dados["evento_id"])
 
         if not evento:
             return jsonify({
@@ -369,8 +407,10 @@ def add_inscricao():
             "id": inscricao.id
         }), 201
 
-    except Exception:
+    except Exception as erro:
         s.rollback()
+        print("Erro ao realizar inscrição:", erro)
+
         return jsonify({
             "mensagem": "Erro ao realizar inscrição."
         }), 500
@@ -395,9 +435,9 @@ def confirmar_presenca(id):
                 "mensagem": "Inscrição não encontrada!"
             }), 404
 
-        data = request.get_json(silent=True) or {}
+        dados = request.get_json(silent=True) or {}
 
-        if data.get("presente") is not True:
+        if dados.get("presente") is not True:
             return jsonify({
                 "mensagem": "Envie presente: true para confirmar a presença."
             }), 400
@@ -411,8 +451,10 @@ def confirmar_presenca(id):
             "presente": inscricao.presente
         })
 
-    except Exception:
+    except Exception as erro:
         s.rollback()
+        print("Erro ao confirmar presença:", erro)
+
         return jsonify({
             "mensagem": "Erro ao confirmar presença."
         }), 500
@@ -425,6 +467,7 @@ def confirmar_presenca(id):
 # CERTIFICADOS
 # =========================
 
+# LISTAR TODOS OS CERTIFICADOS
 @app.route("/certificacoes", methods=["GET"])
 def get_certificacoes():
     s = Session()
@@ -441,10 +484,12 @@ def get_certificacoes():
             }
             for c in certificados
         ])
+
     finally:
         s.close()
 
 
+# BUSCAR CERTIFICADO PELO CÓDIGO
 @app.route("/certificacoes/<string:codigo>", methods=["GET"])
 def get_certificado_unico(codigo):
     s = Session()
@@ -460,8 +505,19 @@ def get_certificado_unico(codigo):
             }), 404
 
         inscricao = s.get(Inscricao, certificado.inscricao_id)
+
+        if not inscricao:
+            return jsonify({
+                "mensagem": "Inscrição do certificado não encontrada!"
+            }), 404
+
         evento = s.get(Evento, inscricao.evento_id)
         usuario = s.get(Usuario, inscricao.usuario_id)
+
+        if not evento or not usuario:
+            return jsonify({
+                "mensagem": "Dados do certificado incompletos!"
+            }), 404
 
         return jsonify({
             "id": certificado.id,
@@ -472,10 +528,12 @@ def get_certificado_unico(codigo):
             "data_evento": evento.data.isoformat(),
             "inscricao_id": inscricao.id
         })
+
     finally:
         s.close()
 
 
+# EMITIR CERTIFICADOS
 @app.route("/certificacoes/emitir", methods=["POST"])
 def emitir_certificados():
     s = Session()
@@ -528,8 +586,10 @@ def emitir_certificados():
             "certificados": emitidos
         })
 
-    except Exception:
+    except Exception as erro:
         s.rollback()
+        print("Erro ao emitir certificados:", erro)
+
         return jsonify({
             "mensagem": "Erro ao emitir certificados."
         }), 500
@@ -538,6 +598,7 @@ def emitir_certificados():
         s.close()
 
 
+# LISTAR CERTIFICADOS DE UM USUÁRIO
 @app.route("/usuarios/<int:id>/certificacoes", methods=["GET"])
 def get_certificados_usuario(id):
     s = Session()
@@ -567,7 +628,7 @@ def get_certificados_usuario(id):
                 resultado.append({
                     "codigo": certificado.codigo,
                     "data_emissao": certificado.data_emissao.isoformat(),
-                    "evento": evento.nome
+                    "evento": evento.nome if evento else "Evento não encontrado"
                 })
 
         return jsonify(resultado)
