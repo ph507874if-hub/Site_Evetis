@@ -2,6 +2,7 @@
 const API_URL = "http://127.0.0.1:5000";
 
 // LISTAR EVENTOS
+
 async function carregarEventos() {
     try {
         const resposta = await fetch(`${API_URL}/eventos`);
@@ -36,6 +37,7 @@ async function carregarEventos() {
 
 
 // REALIZAR INSCRIÇÃO
+
 async function inscreverEvento(eventoId) {
     const usuarioId = localStorage.getItem("usuarioId");
 
@@ -69,6 +71,7 @@ async function inscreverEvento(eventoId) {
 
 
 // LISTAR CERTIFICADOS DO USUÁRIO
+
 async function carregarCertificados() {
     const usuarioId = localStorage.getItem("usuarioId");
 
