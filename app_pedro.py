@@ -6,50 +6,44 @@ from sqlalchemy.orm import sessionmaker
 from datetime import date
 from uuid import uuid4
 
-# =========================
-# IMPORTAÇÃO DOS MODELOS
-# =========================
-
-# Modelos desenvolvidos por João Pedro
-from modelos import Base, Usuario, Admin
-
-# Modelos de eventos, inscrições e certificações
-from modelos_pedro import Evento, Inscricao, Certificacao
-
-# Modelos de sugestões, avaliações e rotas de cadastro
-from modelos_cadastro_sugestoes import (
+from modelo_do_index import (
+    Base,
+    Usuario,
+    Evento,
+    Inscricao,
+    Certificacao,
     Sugestao,
     Avaliacao,
     registrar_rotas
 )
 
-
-# =========================
-# CONFIGURAÇÃO DO FLASK
-# =========================
-
 app = Flask(__name__)
 CORS(app)
-
-
-# =========================
-# BANCO DE DADOS
-# =========================
 
 engine = create_engine("sqlite:///database.db")
 Session = sessionmaker(bind=engine)
 
-# Cria as tabelas de todos os modelos importados
 Base.metadata.create_all(engine)
 
-# Registra as rotas de cadastro, login,
-# sugestões, reclamações e avaliações
 registrar_rotas(app, Session)
 
+@app.route("/index.html")
+def pagina_inicial():
+    return send_from_directory(app.root_path, "index.html")
 
-# =========================
-# ROTA INICIAL
-# =========================
+
+@app.route("/style.css")
+def folha_de_estilos():
+    return send_from_directory(app.root_path, "style.css")
+
+
+@app.route("/script.js")
+def script_do_index():
+    return send_from_directory(
+        app.root_path,
+        "java_de_idex.js",
+        mimetype="application/javascript"
+    )
 
 @app.route("/")
 def index():
@@ -57,12 +51,6 @@ def index():
         "mensagem": "API do Sistema de Eventos funcionando!"
     })
 
-
-# =========================
-# EVENTOS
-# =========================
-
-# LISTAR TODOS OS EVENTOS
 @app.route("/eventos", methods=["GET"])
 def get_eventos():
     s = Session()
@@ -74,7 +62,7 @@ def get_eventos():
             {
                 "id": e.id,
                 "nome": e.nome,
-                "categoria": getattr(e, "categoria", "Outros"),
+                "categoria": e.categoria,
                 "descricao": e.descricao,
                 "data": e.data.isoformat(),
                 "local": e.local,
@@ -86,8 +74,6 @@ def get_eventos():
     finally:
         s.close()
 
-
-# BUSCAR UM EVENTO PELO ID
 @app.route("/eventos/<int:id>", methods=["GET"])
 def get_evento_unico(id):
     s = Session()
@@ -103,7 +89,7 @@ def get_evento_unico(id):
         return jsonify({
             "id": evento.id,
             "nome": evento.nome,
-            "categoria": getattr(evento, "categoria", "Outros"),
+            "categoria": evento.categoria,
             "descricao": evento.descricao,
             "data": evento.data.isoformat(),
             "local": evento.local,
@@ -113,8 +99,6 @@ def get_evento_unico(id):
     finally:
         s.close()
 
-
-# CADASTRAR EVENTO
 @app.route("/eventos", methods=["POST"])
 def add_evento():
     s = Session()
@@ -127,22 +111,45 @@ def add_evento():
                 "mensagem": "Envie os dados do evento!"
             }), 400
 
-        campos = ["nome", "data", "local", "admin_id"]
+        campos = ["nome", "categoria", "data", "local", "admin_id"]
 
         if any(
             campo not in dados or dados[campo] in (None, "")
             for campo in campos
         ):
             return jsonify({
-                "mensagem": "Informe nome, data, local e admin_id."
+                "mensagem": "Informe nome, categoria, data, local e admin_id."
             }), 400
 
-        administrador = s.get(Admin, dados["admin_id"])
+        administrador = s.get(Usuario, dados["admin_id"])
 
         if not administrador:
             return jsonify({
                 "mensagem": "Administrador não encontrado!"
             }), 404
+        if administrador.tipo != "admin":
+            return jsonify({
+                "mensagem": "Somente administradores podem criar eventos."
+            }), 403
+
+        nome = dados["nome"].strip()
+        categoria = dados["categoria"].strip()
+        local = dados["local"].strip()
+        descricao = dados.get("descricao", "").strip()
+
+        if (
+            not nome
+            or len(nome) > 80
+            or not categoria
+            or len(categoria) > 50
+            or not local
+            or len(local) > 100
+            or not descricao
+            or len(descricao) > 500
+        ):
+            return jsonify({
+                "mensagem": "Revise os campos do evento e seus limites."
+            }), 400
 
         try:
             data_evento = date.fromisoformat(dados["data"])
@@ -153,16 +160,13 @@ def add_evento():
             }), 400
 
         evento = Evento(
-            nome=dados["nome"],
-            descricao=dados.get("descricao", ""),
+            nome=nome,
+            categoria=categoria,
+            descricao=descricao,
             data=data_evento,
-            local=dados["local"],
+            local=local,
             admin_id=administrador.id
         )
-
-        # Salva a categoria se o modelo possuir esse campo
-        if hasattr(Evento, "categoria"):
-            evento.categoria = dados.get("categoria", "Outros")
 
         s.add(evento)
         s.commit()
@@ -183,8 +187,6 @@ def add_evento():
     finally:
         s.close()
 
-
-# ATUALIZAR EVENTO
 @app.route("/eventos/<int:id>", methods=["PUT"])
 def atualizar_evento(id):
     s = Session()
@@ -213,7 +215,7 @@ def atualizar_evento(id):
         if "local" in dados:
             evento.local = dados["local"]
 
-        if "categoria" in dados and hasattr(Evento, "categoria"):
+        if "categoria" in dados:
             evento.categoria = dados["categoria"]
 
         if "data" in dados:
@@ -226,9 +228,9 @@ def atualizar_evento(id):
                 }), 400
 
         if "admin_id" in dados:
-            administrador = s.get(Admin, dados["admin_id"])
+            administrador = s.get(Usuario, dados["admin_id"])
 
-            if not administrador:
+            if not administrador or administrador.tipo != "admin":
                 return jsonify({
                     "mensagem": "Administrador não encontrado!"
                 }), 404
@@ -253,7 +255,6 @@ def atualizar_evento(id):
         s.close()
 
 
-# DELETAR EVENTO
 @app.route("/eventos/<int:id>", methods=["DELETE"])
 def deletar_evento(id):
     s = Session()
@@ -293,12 +294,6 @@ def deletar_evento(id):
     finally:
         s.close()
 
-
-# =========================
-# INSCRIÇÕES
-# =========================
-
-# LISTAR TODAS AS INSCRIÇÕES
 @app.route("/inscricoes", methods=["GET"])
 def get_inscricoes():
     s = Session()
@@ -320,8 +315,6 @@ def get_inscricoes():
     finally:
         s.close()
 
-
-# BUSCAR UMA INSCRIÇÃO PELO ID
 @app.route("/inscricoes/<int:id>", methods=["GET"])
 def get_inscricao_unica(id):
     s = Session()
@@ -345,8 +338,6 @@ def get_inscricao_unica(id):
     finally:
         s.close()
 
-
-# REALIZAR INSCRIÇÃO
 @app.route("/inscricoes", methods=["POST"])
 def add_inscricao():
     s = Session()
@@ -418,11 +409,6 @@ def add_inscricao():
     finally:
         s.close()
 
-
-# =========================
-# CONFIRMAR PRESENÇA
-# =========================
-
 @app.route("/inscricoes/<int:id>/presenca", methods=["PUT"])
 def confirmar_presenca(id):
     s = Session()
@@ -462,12 +448,6 @@ def confirmar_presenca(id):
     finally:
         s.close()
 
-
-# =========================
-# CERTIFICADOS
-# =========================
-
-# LISTAR TODOS OS CERTIFICADOS
 @app.route("/certificacoes", methods=["GET"])
 def get_certificacoes():
     s = Session()
@@ -488,8 +468,6 @@ def get_certificacoes():
     finally:
         s.close()
 
-
-# BUSCAR CERTIFICADO PELO CÓDIGO
 @app.route("/certificacoes/<string:codigo>", methods=["GET"])
 def get_certificado_unico(codigo):
     s = Session()
@@ -532,8 +510,6 @@ def get_certificado_unico(codigo):
     finally:
         s.close()
 
-
-# EMITIR CERTIFICADOS
 @app.route("/certificacoes/emitir", methods=["POST"])
 def emitir_certificados():
     s = Session()
@@ -545,7 +521,6 @@ def emitir_certificados():
         for inscricao in inscricoes:
             evento = s.get(Evento, inscricao.evento_id)
 
-            # Só emite se o evento terminou e a presença foi confirmada
             if (
                 not evento
                 or evento.data >= date.today()
@@ -553,7 +528,6 @@ def emitir_certificados():
             ):
                 continue
 
-            # Evita emitir mais de um certificado por inscrição
             certificado_existente = s.query(Certificacao).filter_by(
                 inscricao_id=inscricao.id
             ).first()
@@ -597,8 +571,6 @@ def emitir_certificados():
     finally:
         s.close()
 
-
-# LISTAR CERTIFICADOS DE UM USUÁRIO
 @app.route("/usuarios/<int:id>/certificacoes", methods=["GET"])
 def get_certificados_usuario(id):
     s = Session()
@@ -621,10 +593,8 @@ def get_certificados_usuario(id):
             certificado = s.query(Certificacao).filter_by(
                 inscricao_id=inscricao.id
             ).first()
-
             if certificado:
                 evento = s.get(Evento, inscricao.evento_id)
-
                 resultado.append({
                     "codigo": certificado.codigo,
                     "data_emissao": certificado.data_emissao.isoformat(),
@@ -632,14 +602,8 @@ def get_certificados_usuario(id):
                 })
 
         return jsonify(resultado)
-
     finally:
         s.close()
-
-
-# =========================
-# INICIAR SERVIDOR
-# =========================
 
 if __name__ == "__main__":
     app.run(debug=True)
