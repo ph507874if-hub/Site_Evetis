@@ -3,52 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sugestões e reclamações - Encontraê</title>
+    <title>Sobre nós - Encontraê</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="sugestoes-pagina">
+<body class="sobre-pagina">
 <header class="topbar">
     <a href="index.html" class="brand"><span class="brand-icon">e</span> encontraê</a>
     <nav>
         <a href="index.html#eventos">Explorar eventos</a>
-        <a href="sobre.html">Sobre nós</a>
+        <a href="sobre.html#">Sobre nós</a>
+        <a href="sugestoes.html">Contato</a>
     </nav>
-    <a href="sugestoes.html" class="btn btn-outline" aria-current="page">Sugestões e reclamações</a>
+    <a href="cadastro.html" class="btn btn-primary">Criar conta</a>
 </header>
 
 <main>
     <section class="hero sobre-hero">
-        <span class="etiqueta">FALE COM A GENTE</span>
-        <h1>Sugestões, elogios<br><span>ou reclamações.</span></h1>
-        <p>Queremos ouvir você. Compartilhe uma ideia ou conte para nós sobre algo que não saiu como esperado.</p>
+        <span class="etiqueta">SOBRE O ENCONTRAÊ</span>
+        <h1>Encontros que aproximam.<br><span>Experiências que ficam.</span></h1>
+        <p>Acreditamos que boas experiências começam quando pessoas encontram algo em comum.</p>
+        <a href="index.html#eventos" class="btn btn-light">Descobrir eventos →</a>
     </section>
 
-    <section class="sugestoes-conteudo">
-        <span class="etiqueta">ENVIE SUA MENSAGEM</span>
-        <h2>Como podemos ajudar?</h2>
-        <p>Envie uma sugestão para melhorar a plataforma ou registre uma reclamação sobre sua experiência.</p>
-        <form id="form-sugestao" class="sugestoes-formulario">
-            <label for="tipo-mensagem">Tipo de mensagem</label>
-            <select id="tipo-mensagem" name="tipo" required>
-                <option value="">Selecione uma opção</option>
-                <option value="Sugestão">Sugestão</option>
-                <option value="Reclamação">Reclamação</option>
-            </select>
-            <label for="categoria-sugestao">Assunto</label>
-            <select id="categoria-sugestao" name="categoria" required>
-                <option value="">Selecione um assunto</option>
-                <option>Eventos</option>
-                <option>Conta e acesso</option>
-                <option>Experiência na plataforma</option>
-                <option>Segurança ou comportamento</option>
-                <option>Outro</option>
-            </select>
-            <label for="texto-sugestao">Sua mensagem</label>
-            <textarea id="texto-sugestao" name="mensagem" rows="5" maxlength="1000" placeholder="Conte sua sugestão ou reclamação..." required></textarea>
-            <p class="sugestoes-aviso">As mensagens ficam salvas apenas neste navegador e não são enviadas para a equipe do Encontraê.</p>
-            <p id="status-sugestao" class="sugestoes-status" role="status" aria-live="polite"></p>
-            <button type="submit" class="btn btn-primary">Salvar mensagem</button>
-        </form>
+    <div class="sobre-conteudo">
+        <section class="sobre-introducao">
+            <span class="etiqueta">QUEM SOMOS</span>
+            <h2>Um lugar para encontrar o que faz sentido para você</h2>
+            <p>O Encontraê é uma plataforma para descobrir eventos, conhecer pessoas e tirar ideias do papel. Reunimos experiências de diferentes interesses para que seja mais fácil encontrar algo novo para fazer — ou alguém para fazer junto.</p>
+        </section>
+
+        <section class="sobre-destaque">
+            <span class="sobre-destaque-icone" aria-hidden="true">✦</span>
+            <div>
+                <span class="etiqueta">NOSSO PROPÓSITO</span>
+                <h2>Mais encontros, menos distância.</h2>
+                <p>Queremos tornar simples a descoberta e a criação de eventos, ajudando comunidades a se conectarem por meio de interesses e experiências compartilhadas.</p>
+            </div>
+        </section>
+
+        <section class="sobre-experiencias">
+            <span class="etiqueta">O QUE NOS MOVE</span>
+            <h2>Feito para descobrir e compartilhar</h2>
+            <p>Uma experiência pensada para quem quer participar, organizar ou simplesmente encontrar uma nova inspiração.</p>
+            <div class="sobre-cards">
+                <article>
+                    <span class="sobre-card-numero">01 — DESCOBRIR</span>
+                    <h3>Explore seus interesses</h3>
+                    <p>Encontre eventos de diferentes categorias e descubra atividades que combinam com você.</p>
+                </article>
+                <article>
+                    <span class="sobre-card-numero">02 — CONECTAR</span>
+                    <h3>Viva junto</h3>
+                    <p>Participe de encontros e conheça pessoas que também têm curiosidade e interesses em comum.</p>
+                </article>
+                <article>
+                    <span class="sobre-card-numero">03 — CRIAR</span>
+                    <h3>Compartilhe uma ideia</h3>
+                    <p>Organize um evento e convide outras pessoas para fazer parte da experiência.</p>
+                </article>
+            </div>
+        </section>
+    </div>
+
+    <section class="banner-final">
+        <div><h2>Pronto para encontrar sua próxima experiência?</h2><p>Explore os eventos e venha fazer parte.</p></div>
+        <a href="index.html#eventos" class="btn btn-light">Explorar eventos →</a>
     </section>
 </main>
 
@@ -57,34 +76,5 @@
     <p>Conectando pessoas e experiências.</p>
     <small>Projeto acadêmico</small>
 </footer>
-
-<script>
-    const formMensagem = document.getElementById('form-sugestao');
-    const statusMensagem = document.getElementById('status-sugestao');
-
-    formMensagem.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const mensagem = {
-            tipo: formMensagem.elements.tipo.value,
-            categoria: formMensagem.elements.categoria.value,
-            texto: formMensagem.elements.mensagem.value.trim(),
-            criadaEm: new Date().toISOString()
-        };
-
-        try {
-            const mensagensSalvas = JSON.parse(localStorage.getItem('encontrae-sugestoes') || '[]');
-            if (!Array.isArray(mensagensSalvas)) {
-                throw new Error('O conteúdo salvo não está no formato esperado.');
-            }
-
-            mensagensSalvas.push(mensagem);
-            localStorage.setItem('encontrae-sugestoes', JSON.stringify(mensagensSalvas));
-            formMensagem.reset();
-            statusMensagem.textContent = 'Mensagem salva neste navegador. Obrigado por compartilhar sua opinião!';
-        } catch (error) {
-            statusMensagem.textContent = 'Não foi possível salvar a mensagem neste navegador. Verifique as permissões de armazenamento e tente novamente.';
-        }
-    });
-</script>
 </body>
 </html>
