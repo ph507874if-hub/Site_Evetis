@@ -26,12 +26,17 @@
     <section class="conta-card">
         <span class="etiqueta">ACESSO À CONTA</span>
         <h2>Entrar</h2>
-        <p class="conta-descricao">Informe seus dados para continuar.</p>
+        <p class="conta-descricao">Informe seus dados para continuar.</p>   
         <form class="conta-formulario" data-form-conta>
             <label for="email-login">E-mail</label>
             <input id="email-login" name="email" type="email" autocomplete="email" required>
             <label for="senha-login">Senha</label>
-            <input id="senha-login" name="senha" type="password" autocomplete="current-password" required>
+            <div style="position: relative; display: flex; align-items: center;">
+                <input id="senha-login" name="senha" type="password" autocomplete="current-password" required style="width: 100%; padding-right: 52px;">
+                <button type="button" aria-controls="senha-login" aria-pressed="false" aria-label="Mostrar senha" onclick="const input = document.getElementById(this.getAttribute('aria-controls')); const mostrando = input.type === 'password'; input.type = mostrando ? 'text' : 'password'; this.setAttribute('aria-pressed', mostrando); this.setAttribute('aria-label', mostrando ? 'Ocultar senha' : 'Mostrar senha');" style="position: absolute; right: 12px; width: 36px; height: 36px; display: grid; place-items: center; border: 0; background: transparent; padding: 0; cursor: pointer; color: #777; transform: translateY(-3px);">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12a9.5 9.5 0 0 1 19 0"/><circle cx="12" cy="12" r="5"/></svg>
+                </button>
+            </div>
             <button type="submit" class="btn btn-primary">Entrar</button>
         </form>
         <p class="conta-aviso" role="status" aria-live="polite">A autenticação ainda não está disponível. Os dados não serão enviados nem salvos.</p>
