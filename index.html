@@ -8,17 +8,21 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <header class="topbar">
-    <a href="#inicio" class="brand"><span class="brand-icon">e</span> encontraê</a>
+    <a href="index.html" class="brand">
+        <span class="brand-icon">e</span> encontraê
+    </a>
+
     <nav>
-        <a href="#eventos">Explorar eventos</a>
-        <a href="#minhas-inscricoes">Minhas inscrições</a>
-        <a href="#sobre">Sobre nós</a>
-        <a href="#reclamacoes">Contato</a>
+        <a href="index.html#eventos">Explorar eventos</a>
+        <a href="sobre.html">Sobre nós</a>
+        <a href="sugestoes.html">Contato</a>
     </nav>
+
     <div id="area-usuario">
-        <button id="btn-login" class="btn btn-outline">Entrar</button>
-        <button id="btn-cadastro" class="btn btn-primary">Criar conta</button>
+        <a href="login.html" class="btn btn-outline">Entrar</a>
+        <a href="cadastro.html" class="btn btn-primary">Criar conta</a>
     </div>
 </header>
 
@@ -61,46 +65,6 @@
         <p id="sem-inscricoes" class="mensagem-vazia">Entre na sua conta para visualizar suas inscrições.</p>
     </section>
 
-    <section class="secao" id="sobre">
-        <span class="etiqueta">QUEM SOMOS</span>
-        <h2>Sobre nós</h2>
-        <p>O Encontraê é uma plataforma criada para aproximar pessoas por meio de eventos, atividades e experiências. Nosso objetivo é facilitar a descoberta de eventos e permitir que qualquer usuário compartilhe suas próprias ideias com a comunidade.</p>
-        <div class="sobre-cards">
-            <article><h3>Descubra</h3><p>Encontre eventos de diferentes categorias e interesses.</p></article>
-            <article><h3>Participe</h3><p>Faça inscrições e acompanhe sua agenda de eventos.</p></article>
-            <article><h3>Compartilhe</h3><p>Crie eventos e convide outras pessoas para participar.</p></article>
-        </div>
-    </section>
-
-    <section class="secao" id="perfil">
-        <span class="etiqueta">SUA CONTA</span>
-        <h2>Meu perfil</h2>
-        <p>Entre na sua conta para visualizar e editar seu perfil.</p>
-        <div id="conteudo-perfil" class="painel">
-            <p>Você precisa entrar para acessar seu perfil.</p>
-        </div>
-    </section>
-
-    <section class="secao" id="reclamacoes">
-        <span class="etiqueta">FALE CONOSCO</span>
-        <h2>Reclamações e sugestões</h2>
-        <p>Conte para nós como podemos melhorar sua experiência.</p>
-        <form id="form-reclamacao" class="painel">
-            <label for="tipo-reclamacao">Tipo de mensagem</label>
-            <select id="tipo-reclamacao" required>
-                <option value="">Selecione</option>
-                <option>Reclamação</option>
-                <option>Sugestão</option>
-                <option>Problema técnico</option>
-                <option>Outro</option>
-            </select>
-            <label for="texto-reclamacao">Mensagem</label>
-            <textarea id="texto-reclamacao" rows="4" maxlength="1000" required placeholder="Escreva sua mensagem..."></textarea>
-            <button class="btn btn-primary" type="submit">Enviar mensagem</button>
-        </form>
-        <h3>Minhas mensagens</h3>
-        <div id="lista-reclamacoes"></div>
-    </section>
 
     <section class="banner-final">
         <div><h2>Tem uma ideia de evento?</h2><p>Crie seu evento e convide pessoas para participar.</p></div>
