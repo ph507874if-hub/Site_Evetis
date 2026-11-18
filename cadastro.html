@@ -12,6 +12,7 @@
     <nav>
         <a href="index.html#eventos">Explorar eventos</a>
         <a href="sobre.html">Sobre nós</a>
+        <a href="sugestoes.html">Contato</a>
     </nav>
     <a href="login.html" class="btn btn-outline">Entrar</a>
 </header>
@@ -32,8 +33,13 @@
             <input id="nome-cadastro" name="nome" type="text" maxlength="80" autocomplete="name" required>
             <label for="email-cadastro">E-mail</label>
             <input id="email-cadastro" name="email" type="email" autocomplete="email" required>
-            <label for="senha-cadastro">Senha</label>
-            <input id="senha-cadastro" name="senha" type="password" minlength="6" autocomplete="new-password" required>
+            <label for="senha-login">Senha</label>
+            <div style="position: relative; display: flex; align-items: center;">
+                <input id="senha-login" name="senha" type="password" autocomplete="current-password" required style="width: 100%; padding-right: 52px;">
+                <button type="button" aria-controls="senha-login" aria-pressed="false" aria-label="Mostrar senha" onclick="const input = document.getElementById(this.getAttribute('aria-controls')); const mostrando = input.type === 'password'; input.type = mostrando ? 'text' : 'password'; this.setAttribute('aria-pressed', mostrando); this.setAttribute('aria-label', mostrando ? 'Ocultar senha' : 'Mostrar senha');" style="position: absolute; right: 12px; width: 36px; height: 36px; display: grid; place-items: center; border: 0; background: transparent; padding: 0; cursor: pointer; color: #777; transform: translateY(-3px);">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12a9.5 9.5 0 0 1 19 0"/><circle cx="12" cy="12" r="5"/></svg>
+                </button>
+            </div>
             <button type="submit" class="btn btn-primary">Criar conta</button>
         </form>
         <p class="conta-aviso" role="status" aria-live="polite">O cadastro ainda não está disponível. Os dados não serão enviados nem salvos.</p>
@@ -47,5 +53,18 @@
     <small>Projeto acadêmico</small>
 </footer>
 <script src="conta.js"></script>
+<script>
+    const senhaCadastro = document.getElementById('senha-cadastro');
+    const alternarSenha = document.querySelector('.alternar-senha');
+    const indicadorSenhaOculta = document.querySelector('.senha-oculta-indicador');
+
+    alternarSenha.addEventListener('click', () => {
+        const mostrarSenha = senhaCadastro.type === 'password';
+        senhaCadastro.type = mostrarSenha ? 'text' : 'password';
+        alternarSenha.setAttribute('aria-label', mostrarSenha ? 'Ocultar senha' : 'Mostrar senha');
+        alternarSenha.setAttribute('aria-pressed', String(mostrarSenha));
+        indicadorSenhaOculta.style.display = mostrarSenha ? 'none' : 'block';
+    });
+</script>
 </body>
 </html>
